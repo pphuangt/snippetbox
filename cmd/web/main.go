@@ -9,6 +9,7 @@ import (
 
 type application struct {
 	logger *slog.Logger
+	config config
 }
 
 type config struct {
@@ -17,25 +18,15 @@ type config struct {
 }
 
 func main() {
-	var cfg config
-	flag.StringVar(&cfg.addr, "addr", ":4000", "HTTP network address")
-	flag.StringVar(&cfg.staticDir, "static-dir", "./ui/static", "Path to static assets")
-	flag.Parse()
-
 	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
 
 	app := &application{logger: logger}
+	flag.StringVar(&app.config.addr, "addr", ":4000", "HTTP network address")
+	flag.StringVar(&app.config.staticDir, "static-dir", "./ui/static", "Path to static assets")
+	flag.Parse()
 
-	mux := http.NewServeMux()
-	fileServer := http.FileServer(http.Dir(cfg.staticDir))
-	mux.Handle("GET /static/", http.StripPrefix("/static/", fileServer))
-	mux.HandleFunc("GET /{$}", app.home)
-	mux.HandleFunc("GET /snippet/view/{id}", app.snippetView)
-	mux.HandleFunc("GET /snippet/create", app.snippetCreate)
-	mux.HandleFunc("POST /snippet/create", app.snippetCreatePost)
-
-	logger.Info("starting server on", slog.Any("addr", cfg.addr))
-	err := http.ListenAndServe(cfg.addr, mux)
+	logger.Info("starting server on", slog.Any("addr", app.config.addr))
+	err := http.ListenAndServe(app.config.addr, app.routes())
 	logger.Error(err.Error())
 	os.Exit(1)
 }
