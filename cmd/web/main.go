@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"flag"
 	_ "github.com/go-sql-driver/mysql"
+	"html/template"
 	"log/slog"
 	"net/http"
 	"os"
@@ -11,9 +12,10 @@ import (
 )
 
 type application struct {
-	logger   *slog.Logger
-	snippets *models.SnippetModel
-	config   config
+	logger        *slog.Logger
+	snippets      *models.SnippetModel
+	config        config
+	templateCache map[string]*template.Template
 }
 
 type config struct {
@@ -38,6 +40,13 @@ func main() {
 	}
 	defer db.Close()
 	app.snippets = &models.SnippetModel{DB: db}
+
+	TemplateCache, err := newTemplateCache()
+	if err != nil {
+		logger.Error(err.Error())
+		os.Exit(1)
+	}
+	app.templateCache = TemplateCache
 
 	logger.Info("starting server on", slog.Any("addr", app.config.addr))
 	err = http.ListenAndServe(app.config.addr, app.routes())
