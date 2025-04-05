@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"flag"
+	"github.com/go-playground/form/v4"
 	_ "github.com/go-sql-driver/mysql"
 	"html/template"
 	"log/slog"
@@ -16,6 +17,7 @@ type application struct {
 	snippets      *models.SnippetModel
 	config        config
 	templateCache map[string]*template.Template
+	formDecoder   *form.Decoder
 }
 
 type config struct {
@@ -47,6 +49,8 @@ func main() {
 		os.Exit(1)
 	}
 	app.templateCache = TemplateCache
+
+	app.formDecoder = form.NewDecoder()
 
 	logger.Info("starting server on", slog.Any("addr", app.config.addr))
 	err = http.ListenAndServe(app.config.addr, app.routes())
