@@ -3,6 +3,8 @@ package main
 import (
 	"database/sql"
 	"flag"
+	"github.com/alexedwards/scs/mysqlstore"
+	"github.com/alexedwards/scs/v2"
 	"github.com/go-playground/form/v4"
 	_ "github.com/go-sql-driver/mysql"
 	"html/template"
@@ -10,14 +12,16 @@ import (
 	"net/http"
 	"os"
 	"snippedbox/internal/models"
+	"time"
 )
 
 type application struct {
-	logger        *slog.Logger
-	snippets      *models.SnippetModel
-	config        config
-	templateCache map[string]*template.Template
-	formDecoder   *form.Decoder
+	logger         *slog.Logger
+	snippets       *models.SnippetModel
+	config         config
+	templateCache  map[string]*template.Template
+	formDecoder    *form.Decoder
+	sessionManager *scs.SessionManager
 }
 
 type config struct {
@@ -51,6 +55,10 @@ func main() {
 	app.templateCache = TemplateCache
 
 	app.formDecoder = form.NewDecoder()
+
+	app.sessionManager = scs.New()
+	app.sessionManager.Store = mysqlstore.New(db)
+	app.sessionManager.Lifetime = 12 * time.Hour
 
 	logger.Info("starting server on", slog.Any("addr", app.config.addr))
 	err = http.ListenAndServe(app.config.addr, app.routes())
