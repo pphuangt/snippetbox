@@ -19,6 +19,7 @@ import (
 type application struct {
 	logger         *slog.Logger
 	snippets       *models.SnippetModel
+	users          *models.UserModel
 	config         config
 	templateCache  map[string]*template.Template
 	formDecoder    *form.Decoder
@@ -47,6 +48,7 @@ func main() {
 	}
 	defer db.Close()
 	app.snippets = &models.SnippetModel{DB: db}
+	app.users = &models.UserModel{DB: db}
 
 	TemplateCache, err := newTemplateCache()
 	if err != nil {
