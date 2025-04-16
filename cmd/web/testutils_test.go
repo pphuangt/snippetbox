@@ -2,17 +2,38 @@ package main
 
 import (
 	"bytes"
+	"github.com/alexedwards/scs/v2"
+	"github.com/go-playground/form/v4"
 	"io"
 	"log/slog"
 	"net/http"
 	"net/http/cookiejar"
 	"net/http/httptest"
-	"snippedbox/internal/assert"
+	"snippedbox/internal/models/mocks"
 	"testing"
+	"time"
 )
 
 func newTestApplication(t *testing.T) *application {
-	return &application{logger: slog.New(slog.DiscardHandler)}
+	templateCache, err := newTemplateCache()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	formDecoder := form.NewDecoder()
+
+	sessionManager := scs.New()
+	sessionManager.Lifetime = 12 * time.Hour
+	sessionManager.Cookie.Secure = true
+
+	return &application{
+		logger:         slog.New(slog.DiscardHandler),
+		snippets:       &mocks.SnippetModel{}, // Use the mock.
+		users:          &mocks.UserModel{},    // Use the mock.
+		templateCache:  templateCache,
+		formDecoder:    formDecoder,
+		sessionManager: sessionManager,
+	}
 }
 
 type testServer struct {
@@ -41,8 +62,6 @@ func (ts *testServer) get(t *testing.T, urlPath string) (int, http.Header, strin
 	if err != nil {
 		t.Fatal(err)
 	}
-
-	assert.Equal(t, rs.StatusCode, http.StatusOK)
 
 	defer rs.Body.Close()
 	body, err := io.ReadAll(rs.Body)
