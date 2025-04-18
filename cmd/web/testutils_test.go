@@ -31,8 +31,8 @@ func newTestApplication(t *testing.T) *application {
 
 	return &application{
 		logger:         slog.New(slog.DiscardHandler),
-		snippets:       &mocks.SnippetModel{}, // Use the mock.
-		users:          &mocks.UserModel{},    // Use the mock.
+		snippets:       &mocks.SnippetModel{},
+		users:          &mocks.UserModel{},
 		templateCache:  templateCache,
 		formDecoder:    formDecoder,
 		sessionManager: sessionManager,
