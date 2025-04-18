@@ -30,6 +30,7 @@ type config struct {
 	addr      string
 	staticDir string
 	dsn       string
+	debug     bool
 }
 
 func main() {
@@ -38,7 +39,8 @@ func main() {
 	app := &application{logger: logger}
 	flag.StringVar(&app.config.addr, "addr", ":4000", "HTTP network address")
 	flag.StringVar(&app.config.staticDir, "static-dir", "./ui/static", "Path to static assets")
-	flag.StringVar(&app.config.dsn, "dsa", "web:pass@/snippetbox?parseTime=true", "MySQL data source name")
+	flag.StringVar(&app.config.dsn, "dsn", "web:pass@/snippetbox?parseTime=true", "MySQL data source name")
+	flag.BoolVar(&app.config.debug, "debug", false, "if specify response with debug mode")
 	flag.Parse()
 
 	db, err := openDB(app.config.dsn)
